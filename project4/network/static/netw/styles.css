@@ -1,0 +1,13 @@
+.post-div{
+    display:flex;
+    border: 1px solid grey;
+    padding-block: 10px;
+    padding-inline: 10px;
+    margin-bottom: 10px;
+}
+.post{
+    border: 1px solid grey;
+    padding-block: 20px;
+    padding-inline: 20px;
+    margin 20px;
+}
