@@ -12,7 +12,7 @@ class Post(models.Model):
     likes = models.ManyToManyField("User", related_name="liked_posts", blank=True)
     
     def __str__(self):
-        return f"{self.user} posted: {self.content}, on {self.timestamp.strftime('%b %d %Y, %I:%M %p')}"
+        return f"{self.user} posted: {self.content}, on {self.timestamp.strftime('%b %d %Y, %I:%M %p')} number of likes {self.likes}"
     
 class Follow(models.Model):
     user = models.ForeignKey("User", on_delete=models.CASCADE, related_name="user_following")

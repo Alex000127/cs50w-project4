@@ -17,6 +17,19 @@ def index(request):
     if request.user.is_authenticated:
         likes = Like.objects.filter(user=request.user)
         liked_dict = {like.post.id: True for like in likes}
+        # print(postsPage)
+        # print(paginator)
+        # print(allposts)
+        # post = Post.objects.get(id = 1)
+        # like = post.likes.count()
+        # print(like)
+        tryy = []
+        for i in allposts:
+            like_count = i.likes.count()
+            tryy.append({'post':i, 'likes': like_count})
+            
+        print(tryy)
+
 
     return render(request, "network/index.html", {
         "postsPage": postsPage,
@@ -164,17 +177,42 @@ def removeLIKE(request, post_id):
     user = request.user
     Like.objects.filter(user=user, post=post).delete()
     
-    like_count = Like.objects.filter(post=post).count()
+    # like_count = Like.objects.filter(post=post).count()
+        # print(allposts)
+   # post = Post.objects.get(pk = post_id)
+    #like_count = post.likes.count()
+    if not Like.objects.filter(user=user, post=post).exists():
+        #Like.objects.create(user=user, post=post)
+        if post.likes.filter(pk=user.id).exists():
+            post.likes.remove(user)
+            liked = False    
+        else:
+            post.likes.add(user)
+            liked = True
+    
+        post = Post.objects.get(pk = post_id)
+        like_count = post.likes.count()
+        print(like_count)    
+    
+    
     
     return JsonResponse({"message": "Like removed", "liked": False, "like_count": like_count})
 
 def addLIKE(request, post_id):
     post = Post.objects.get(pk=post_id)
     user = request.user
-    # Asegúrate de no agregar un like duplicado
-    if not Like.objects.filter(user=user, post=post).exists():
-        Like.objects.create(user=user, post=post)
     
-    like_count = Like.objects.filter(post=post).count()
+    if not Like.objects.filter(user=user, post=post).exists():
+        #Like.objects.create(user=user, post=post)
+        if post.likes.filter(pk=user.id).exists():
+            post.likes.remove(user)
+            liked = False    
+        else:
+            post.likes.add(user)
+            liked = True
+    
+        post = Post.objects.get(pk = post_id)
+        like_count = post.likes.count()
+        print(like_count)
     
     return JsonResponse({"message": "Like added", "liked": True, "like_count": like_count})
