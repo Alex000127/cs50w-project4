@@ -17,23 +17,18 @@ def index(request):
     if request.user.is_authenticated:
         likes = Like.objects.filter(user=request.user)
         liked_dict = {like.post.id: True for like in likes}
-        # print(postsPage)
-        # print(paginator)
-        # print(allposts)
-        # post = Post.objects.get(id = 1)
-        # like = post.likes.count()
-        # print(like)
-        tryy = []
-        for i in allposts:
-            like_count = i.likes.count()
-            tryy.append({'post':i, 'likes': like_count})
-            
-        print(tryy)
+      
+    post_with_likes = []
+    for post in allposts:
+        like_count = post.likes.count()
+        post_with_likes.append({'post':post, 'likes': like_count})
 
-
+    print(f"Esto es: {liked_dict}")
+ 
     return render(request, "network/index.html", {
         "postsPage": postsPage,
-        "liked": liked_dict
+        "liked": liked_dict,
+        "posts": post_with_likes
     })
 
 def login_view(request):
@@ -131,8 +126,21 @@ def following(request):
     page_number = request.GET.get('page')
     postsPage = paginator.get_page(page_number)
     
+    if request.user.is_authenticated:
+        likes = Like.objects.filter(user=request.user)
+        liked_dict = {like.post.id: True for like in likes}
+      
+    post_with_likes = []
+    for post in postsF:
+        like_count = post.likes.count()
+        post_with_likes.append({'post':post, 'likes': like_count})
+
+    print(f"Esto es: {liked_dict}")
+    
     return render(request, "network/following.html",{
-        "postsPage":postsPage
+        "postsPage":postsPage,
+        "liked": liked_dict,
+        "posts": post_with_likes
     })
 
 def follow(request):
@@ -172,47 +180,26 @@ def edit(request, post_id):
         edit_post.save()
         return JsonResponse({"message": "change successful", "data":data["content"]})
 
-def removeLIKE(request, post_id):
-    post = Post.objects.get(pk=post_id)
-    user = request.user
-    Like.objects.filter(user=user, post=post).delete()
-    
-    # like_count = Like.objects.filter(post=post).count()
-        # print(allposts)
-   # post = Post.objects.get(pk = post_id)
-    #like_count = post.likes.count()
-    if not Like.objects.filter(user=user, post=post).exists():
-        #Like.objects.create(user=user, post=post)
-        if post.likes.filter(pk=user.id).exists():
-            post.likes.remove(user)
-            liked = False    
-        else:
-            post.likes.add(user)
-            liked = True
-    
-        post = Post.objects.get(pk = post_id)
-        like_count = post.likes.count()
-        print(like_count)    
-    
-    
-    
-    return JsonResponse({"message": "Like removed", "liked": False, "like_count": like_count})
 
 def addLIKE(request, post_id):
-    post = Post.objects.get(pk=post_id)
+    #validamos para saber si el post existe o no!
+    post = get_object_or_404(Post, pk=post_id)
     user = request.user
+
+    if not user.is_authenticated:
+        return JsonResponse({"Error": "Usuario no autenticado"}, status=401)
     
-    if not Like.objects.filter(user=user, post=post).exists():
-        #Like.objects.create(user=user, post=post)
-        if post.likes.filter(pk=user.id).exists():
-            post.likes.remove(user)
-            liked = False    
-        else:
-            post.likes.add(user)
-            liked = True
     
-        post = Post.objects.get(pk = post_id)
-        like_count = post.likes.count()
-        print(like_count)
+    if post.likes.filter(pk=user.id).exists() and Like.objects.filter(user=user, post=post).exists():
+        post.likes.remove(user) 
+        Like.objects.filter(user=user, post=post).delete() 
+        liked =False
+    else:
+        post.likes.add(user)
+        Like.objects.create(user=user, post=post)
+        liked = True
+
+    like_count = post.likes.count()
+    print(like_count)
     
-    return JsonResponse({"message": "Like added", "liked": True, "like_count": like_count})
+    return JsonResponse({"message": "Like added", "liked": liked, "like_count": like_count})
